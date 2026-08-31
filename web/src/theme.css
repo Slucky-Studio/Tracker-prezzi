@@ -225,3 +225,9 @@ textarea.campo { border-radius: var(--r-minimo); resize: vertical; min-height: 7
   font-size: clamp(42px, 12vw, 58px);
   letter-spacing: -2px;
 }
+
+/* opzione selezionata: bianco, non accento — l'accento resta raro */
+.bottone.scelto {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: var(--hairline);
+}

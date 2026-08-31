@@ -15,6 +15,7 @@ import { salvaImmagine, eliminaImmagine } from './immagini.js'
 import { scarica } from './scraper/scarica.js'
 import { estrai } from './scraper/estrai.js'
 import { eseguiControllo, controlloInCorso } from './controllo.js'
+import { avviaScheduler, riprogramma } from './scheduler.js'
 import { ipLocale } from './rete.js'
 
 const PORTA = Number(process.env.PORTA || process.env.PORT || 4173)
@@ -174,6 +175,7 @@ app.patch('/api/impostazioni', async (req, res) => {
     dati.impostazioni.frequenzaControllo = c.frequenzaControllo
   }
   await scrivi(dati)
+  await riprogramma()
   res.json({ impostazioni: dati.impostazioni })
 })
 
@@ -268,13 +270,14 @@ function pulisciUrl(v) {
 /* ----------------------------- avvio ----------------------------- */
 
 export function avvia() {
-  return app.listen(PORTA, '0.0.0.0', () => {
+  return app.listen(PORTA, '0.0.0.0', async () => {
     const ip = ipLocale()
     console.log('')
     console.log('  Soglia è in ascolto.')
     console.log(`  su questo computer   http://localhost:${PORTA}`)
     if (ip) console.log(`  dal telefono         http://${ip}:${PORTA}`)
     console.log(`  dati                 ${FILE_DATI}`)
+    await avviaScheduler()
     console.log('')
   })
 }

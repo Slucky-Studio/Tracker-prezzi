@@ -1,0 +1,29 @@
+.grafico { width: 100%; display: block; overflow: visible; }
+.grafico-guscio { padding: var(--s5) var(--s4) var(--s4); }
+
+.grafico-linea {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.86);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.grafico-area { fill: url(#velo-grafico); }
+.grafico-griglia { stroke: rgba(255, 255, 255, 0.12); stroke-width: 1; }
+.grafico-obiettivo {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.grafico-punto { fill: rgba(255, 255, 255, 0.75); }
+.grafico-ultimo { fill: #fff; }
+.grafico-testo {
+  /* unità del viewBox: a schermo tornano ~9-11px */
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.42);
+  font-variant-numeric: tabular-nums;
+}
+.grafico-vuoto { padding: var(--s6) var(--s4); text-align: center; }

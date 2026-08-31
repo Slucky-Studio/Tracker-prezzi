@@ -1,5 +1,6 @@
 .scelte { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .scelte .bottone { flex: 1 1 180px; }
+.scelte .bottone.valuta { flex: 0 1 84px; }
 
 .sfondi-scelta {
   display: grid;

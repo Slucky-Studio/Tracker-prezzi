@@ -3,6 +3,7 @@ import './Dettaglio.css'
 import Vetro, { Pannello } from '../components/Vetro'
 import Verdetto from '../components/Verdetto'
 import FasciaPrezzo from '../components/FasciaPrezzo'
+import GraficoStorico from '../components/GraficoStorico'
 import { analizza } from '../utils/verdetto'
 import {
   formattaNumero, formattaPrezzo, formattaPercentuale,
@@ -107,6 +108,14 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
         </div>
 
         <FasciaPrezzo analisi={analisi} obiettivo={prodotto.prezzoObiettivo} valuta={valuta} />
+
+        <Pannello className="grafico-guscio" style={{ marginTop: 'var(--s5)' }}>
+          <GraficoStorico
+            storico={analisi.storico}
+            valuta={valuta}
+            obiettivo={prodotto.prezzoObiettivo}
+          />
+        </Pannello>
 
         <Pannello className="numeri">
           <div className="numero">
