@@ -23,12 +23,38 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
   const [avviso, setAvviso] = useState(null)
   const [errore, setErrore] = useState(null)
   const [ocr, setOcr] = useState(null)
+  // prodotto già creato dal link ma senza prezzo: qui si completa, non si duplica
+  const [creato, setCreato] = useState(null)
   const fileRef = useRef(null)
 
-  const pronto = modo === 'link' ? url.trim().length > 4 : nome.trim().length > 0
+  const pronto = creato
+    ? prezzo.trim().length > 0
+    : (modo === 'link' ? url.trim().length > 4 : nome.trim().length > 0)
+
+  /** Secondo passo dopo un link senza prezzo: completa la scheda già creata. */
+  async function completa() {
+    setInCorso(true); setErrore(null)
+    try {
+      const campi = {}
+      if (nome.trim() && nome.trim() !== creato.nome) campi.nome = nome.trim()
+      if (obiettivo.trim()) campi.prezzoObiettivo = obiettivo.trim()
+      if (Object.keys(campi).length) await api.aggiornaProdotto(creato.id, campi)
+
+      const n = Number(prezzo.trim().replace(',', '.'))
+      if (Number.isFinite(n)) await api.aggiungiPrezzo(creato.id, n)
+
+      onFatto?.(creato)
+      onChiudi?.()
+    } catch (e) {
+      setErrore(e.message)
+    } finally {
+      setInCorso(false)
+    }
+  }
 
   async function salva() {
     if (!pronto || inCorso) return
+    if (creato) return completa()
     setInCorso(true); setErrore(null); setAvviso(null)
     try {
       const risposta = await api.creaProdotto({
@@ -42,6 +68,7 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
       if (modo === 'link' && p.manuale) {
         setAvviso('Non sono riuscito a leggere il prezzo da questo sito. Inseriscilo tu, il resto funziona lo stesso.')
         setModo('mano')
+        setCreato(p)
         setNome(p.nome && p.nome !== 'Senza nome' ? p.nome : nome)
         onFatto?.(p, { resta: true })
       } else {
@@ -80,24 +107,26 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
       onChiudi={onChiudi}
       piede={
         <>
-          <button className="bottone" onClick={onChiudi}>Annulla</button>
+          <button className="bottone" onClick={onChiudi}>{creato ? 'Dopo' : 'Annulla'}</button>
           <button className="bottone primario" disabled={!pronto || inCorso} onClick={salva}>
-            {inCorso ? 'Un attimo…' : 'Salva'}
+            {inCorso ? 'Un attimo…' : (creato ? 'Salva il prezzo' : 'Salva')}
           </button>
         </>
       }
     >
-      <Pannello className="segmenti" pillola>
-        {MODI.map(m => (
-          <button
-            key={m.id}
-            className={modo === m.id ? 'attivo' : ''}
-            onClick={() => { setModo(m.id); setErrore(null) }}
-          >
-            {m.etichetta}
-          </button>
-        ))}
-      </Pannello>
+      {!creato && (
+        <Pannello className="segmenti" pillola>
+          {MODI.map(m => (
+            <button
+              key={m.id}
+              className={modo === m.id ? 'attivo' : ''}
+              onClick={() => { setModo(m.id); setErrore(null) }}
+            >
+              {m.etichetta}
+            </button>
+          ))}
+        </Pannello>
+      )}
 
       {modo === 'link' && (
         <>

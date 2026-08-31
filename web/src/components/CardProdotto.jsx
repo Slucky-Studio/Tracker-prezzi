@@ -5,6 +5,7 @@ import Verdetto from './Verdetto'
 import FasciaPrezzo from './FasciaPrezzo'
 import { analizza } from '../utils/verdetto'
 import { formattaNumero, formattaPrezzo, simbolo, dominio, quando } from '../utils/formato'
+import { urlImmagine } from '../api'
 
 const STATI = { fallito: 'controllo fallito', bloccato: 'sito bloccato' }
 
@@ -25,7 +26,7 @@ export default function CardProdotto({ prodotto, valuta = 'EUR', ritardo = 0, on
         {prodotto.immagine && !fotoRotta && (
           <img
             className="card-foto"
-            src={prodotto.immagine}
+            src={urlImmagine(prodotto.immagine)}
             alt=""
             onError={() => setFotoRotta(true)}
           />
@@ -34,9 +35,8 @@ export default function CardProdotto({ prodotto, valuta = 'EUR', ritardo = 0, on
           <div className="t-titolo card-nome">{prodotto.nome}</div>
           <div className="card-fonte">
             <span className="t-etichetta">
-              {prodotto.url ? dominio(prodotto.url) : 'a mano'}
+              {prodotto.url ? dominio(prodotto.url) : 'a mano'}{stato ? ` · ${stato}` : ''}
             </span>
-            {stato && <span className="t-etichetta">· {stato}</span>}
           </div>
         </div>
         <Verdetto chiave={analisi.verdetto} />

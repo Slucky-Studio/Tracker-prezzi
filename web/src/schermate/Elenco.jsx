@@ -105,7 +105,7 @@ export default function Elenco({ dati, onApri, onAggiungi, onImpostazioni, onCon
               : 'Cambia la ricerca, o togli il filtro sui tag.'}
           </div>
           {dati.prodotti.length === 0 && (
-            <button className="bottone primario" onClick={onAggiungi}>Aggiungi il primo</button>
+            <button className="bottone" onClick={onAggiungi}>Aggiungi il primo</button>
           )}
         </Vetro>
       ) : (

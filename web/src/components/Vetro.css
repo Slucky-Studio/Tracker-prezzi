@@ -54,4 +54,12 @@
   background: rgba(255, 255, 255, 0.30);
   pointer-events: none;
 }
+.pannello::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 18px; right: 18px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
 .pannello.pillola { border-radius: var(--r-pillola); }
