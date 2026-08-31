@@ -1,0 +1,227 @@
+/* ------------------------------------------------------------------
+   Soglia — token.
+   Palette derivata dal soggetto: il denaro, l'attesa, l'ora giusta.
+   Viola-notte profondo, una sola luce ambrata.
+   Se scrivi un esadecimale dentro un componente, andava qui.
+   ------------------------------------------------------------------ */
+
+:root {
+  /* materia */
+  --ink:          #1B1520;
+  --ink-alto:     #2A2033;
+  --ink-soft:     rgba(27, 21, 32, 0.42);
+  --ink-soft-più: rgba(27, 21, 32, 0.62);
+
+  /* accento: uno solo, caldo. Massimo 3 comparse per schermata. */
+  --accento:      #F2A65A;
+  --accento-cupo: #8A4B1E;
+  --accento-velo: rgba(242, 166, 90, 0.16);
+
+  /* testo */
+  --testo:        #FFFFFF;
+  --testo-dim:    rgba(255, 255, 255, 0.66);
+  --testo-faint:  rgba(255, 255, 255, 0.42);
+
+  /* bordi */
+  --hairline:      rgba(255, 255, 255, 0.26);
+  --hairline-alto: rgba(255, 255, 255, 0.55);
+  --hairline-basso: rgba(0, 0, 0, 0.18);
+  --hairline-interno: rgba(255, 255, 255, 0.14);
+
+  /* raggi — una sola famiglia */
+  --r-card:     34px;
+  --r-pannello: 26px;
+  --r-pillola:  22px;
+  --r-minimo:   14px;
+
+  /* spazi — multipli di 4 */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px;
+
+  /* movimento */
+  --lento:  600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  --medio:  500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  --rapido: 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #radice { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--testo);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+               system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+/* tutti i numeri tabulari, sempre */
+input, button, select, textarea { font: inherit; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------
+   Scala tipografica — la gerarchia la fa la scala, non il colore.
+   ------------------------------------------------------------------ */
+
+.t-hero {
+  font-size: clamp(52px, 15vw, 76px);
+  font-weight: 200;
+  letter-spacing: -3px;
+  line-height: 0.98;
+}
+
+.t-titolo {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.24;
+}
+
+.t-corpo {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--testo-dim);
+}
+
+.t-etichetta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--testo-faint);
+}
+
+.t-valore {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.dim   { color: var(--testo-dim); }
+.faint { color: var(--testo-faint); }
+
+/* ------------------------------------------------------------------
+   Entrata: fade + 20px di risalita, una volta sola.
+   ------------------------------------------------------------------ */
+
+@keyframes sali {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.entra {
+  animation: sali var(--medio) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entra { animation: none; }
+  * { transition-duration: 1ms !important; }
+}
+
+/* ------------------------------------------------------------------
+   Controlli — tutti nella stessa famiglia di raggi.
+   ------------------------------------------------------------------ */
+
+.campo {
+  width: 100%;
+  padding: 13px var(--s4);
+  border-radius: var(--r-pillola);
+  border: 1px solid var(--hairline-interno);
+  background: var(--ink-soft);
+  color: var(--testo);
+  font-size: 15px;
+  outline: none;
+  transition: border-color var(--rapido), background var(--rapido);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.campo::placeholder { color: var(--testo-faint); }
+.campo:focus { border-color: var(--hairline); background: var(--ink-soft-più); }
+
+textarea.campo { border-radius: var(--r-minimo); resize: vertical; min-height: 76px; }
+
+.bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: 12px var(--s5);
+  min-height: 44px;
+  border-radius: var(--r-pillola);
+  border: 1px solid var(--hairline-interno);
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--testo);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--rapido), background var(--rapido), opacity var(--rapido);
+}
+.bottone:hover { background: rgba(255, 255, 255, 0.15); }
+.bottone:active { transform: scale(0.97); }
+.bottone:disabled { opacity: 0.45; cursor: default; }
+
+/* l'unico bottone che porta l'accento */
+.bottone.primario {
+  background: linear-gradient(140deg, var(--accento), var(--accento-cupo));
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #241203;
+}
+.bottone.primario:hover { filter: brightness(1.07); }
+
+.bottone.piatto {
+  background: transparent;
+  border-color: transparent;
+  color: var(--testo-dim);
+  font-weight: 400;
+  padding: 12px var(--s3);
+}
+.bottone.piatto:hover { background: rgba(255, 255, 255, 0.08); color: var(--testo); }
+
+.bottone.pericolo:hover { background: rgba(255, 90, 70, 0.18); }
+
+.riga { display: flex; align-items: center; gap: var(--s3); }
+.colonna { display: flex; flex-direction: column; }
+.cresci { flex: 1; min-width: 0; }
+.tronca { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* pillola per tag e stati */
+.pillola {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--r-pillola);
+  border: 1px solid var(--hairline-interno);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--testo-dim);
+  white-space: nowrap;
+}
+.pillola.attiva {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--hairline);
+  color: var(--testo);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* variante dell'hero per le card in griglia */
+.t-hero.mini {
+  font-size: clamp(42px, 12vw, 58px);
+  letter-spacing: -2px;
+}

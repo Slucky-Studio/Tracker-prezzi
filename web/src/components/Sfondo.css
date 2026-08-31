@@ -1,0 +1,29 @@
+.sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--ink);
+  overflow: hidden;
+}
+
+.sfondo-gradiente { position: absolute; inset: 0; }
+
+.sfondo-foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+.sfondo-foto.pronta { opacity: 1; }
+
+/* velo + gradiente verticale: il vetro ha bisogno di contrasto sotto */
+.sfondo-velo {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12, 9, 16, 0.42) 0%, rgba(12, 9, 16, 0) 26%,
+                    rgba(12, 9, 16, 0) 62%, rgba(12, 9, 16, 0.52) 100%);
+}

@@ -1,0 +1,29 @@
+.guscio {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) var(--s4)
+           calc(96px + env(safe-area-inset-bottom));
+  min-height: 100%;
+}
+
+.intestazione {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s4) var(--s1) var(--s6);
+}
+
+.marchio { font-size: 26px; font-weight: 600; letter-spacing: -0.6px; }
+.marchio-sotto { margin-top: 2px; }
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--s4);
+}
+
+@media (max-width: 420px) {
+  .guscio { padding-left: var(--s3); padding-right: var(--s3); }
+  .griglia { grid-template-columns: 1fr; gap: var(--s3); }
+}

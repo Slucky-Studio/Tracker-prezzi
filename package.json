@@ -1,0 +1,21 @@
+{
+  "name": "soglia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tracker personale di prezzi. Nessuna API key, dati in locale.",
+  "type": "module",
+  "workspaces": ["web"],
+  "scripts": {
+    "start": "npm run build && node server/index.js",
+    "build": "npm run build --workspace web",
+    "server": "node server/index.js",
+    "dev": "node server/index.js & npm run dev --workspace web",
+    "controlla": "node server/controlla.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^5.1.0",
+    "node-cron": "^3.0.3"
+  }
+}

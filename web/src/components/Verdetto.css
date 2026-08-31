@@ -1,0 +1,30 @@
+.verdetto {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: var(--r-pillola);
+  border: 1px solid var(--hairline-interno);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--testo-dim);
+  white-space: nowrap;
+}
+
+/* l'unico caso in cui il verdetto prende l'accento */
+.verdetto.acceso {
+  color: var(--accento);
+  border-color: rgba(242, 166, 90, 0.42);
+  background: var(--accento-velo);
+}
+
+.verdetto-pallino {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.8;
+}
