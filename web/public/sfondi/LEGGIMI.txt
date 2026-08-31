@@ -1,0 +1,10 @@
+Metti qui le tue fotografie di sfondo, con questi nomi esatti:
+
+  notturno.jpg     Notte viola
+  ambra.jpg        Ora ambrata
+  bruma.jpg        Bruma fredda
+  inchiostro.jpg   Inchiostro
+
+Formato: JPG o PNG, orizzontale, almeno 1600px di larghezza.
+Se un file non c'è, resta il gradiente dipinto a mano: la schermata
+non è mai bianca né rotta. Dopo averle messe qui, rilancia `npm start`.
