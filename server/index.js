@@ -12,6 +12,9 @@ import {
   registraPrezzo, validaImport
 } from './archivio.js'
 import { salvaImmagine, eliminaImmagine } from './immagini.js'
+import { scarica } from './scraper/scarica.js'
+import { estrai } from './scraper/estrai.js'
+import { eseguiControllo, controlloInCorso } from './controllo.js'
 import { ipLocale } from './rete.js'
 
 const PORTA = Number(process.env.PORTA || process.env.PORT || 4173)
@@ -31,28 +34,72 @@ app.get('/api/stato', async (_req, res) => {
 app.post('/api/prodotti', async (req, res) => {
   try {
     const corpo = req.body || {}
+    const url = pulisciUrl(corpo.url)
+
     let immagine = corpo.immagine || null
     if (corpo.immagineDati) immagine = await salvaImmagine(corpo.immagineDati)
 
+    let nome = (corpo.nome || '').trim()
+    let prezzo = numero(corpo.prezzo)
+    let fonte = prezzo === null ? null : 'manuale'
+    let stato = null
+    let letto = null
+
+    // Percorso principale: dal link, con la cascata di estrazione.
+    if (url) {
+      const scaricata = await scarica(url)
+      if (scaricata.ok) {
+        letto = estrai(scaricata.html, scaricata.urlFinale || url)
+        if (!nome && letto.nome) nome = letto.nome
+        if (!immagine && letto.immagine) immagine = letto.immagine
+        if (prezzo === null && letto.prezzo !== null) { prezzo = letto.prezzo; fonte = 'auto' }
+        stato = letto.prezzo === null ? 'fallito' : 'ok'
+      } else {
+        stato = scaricata.stato
+      }
+    }
+
     const prodotto = nuovoProdotto({
-      nome: (corpo.nome || '').trim() || 'Senza nome',
-      url: pulisciUrl(corpo.url),
+      nome: nome || 'Senza nome',
+      url,
       immagine,
       note: corpo.note || '',
       tag: corpo.tag || [],
       prezzoObiettivo: numero(corpo.prezzoObiettivo),
-      prezzo: numero(corpo.prezzo),
-      manuale: true,
-      fonte: 'manuale'
+      prezzo,
+      fonte: fonte || 'manuale',
+      manuale: !url || fonte !== 'auto'
     })
+    if (url) {
+      prodotto.ultimoControllo = new Date().toISOString()
+      prodotto.statoUltimoControllo = stato
+    }
 
     const dati = await leggi()
     dati.prodotti.unshift(prodotto)
     await scrivi(dati)
-    res.status(201).json({ prodotto })
+    res.status(201).json({ prodotto, lettura: letto ? letto.fonte : null })
   } catch (e) {
     res.status(400).json({ errore: e.message })
   }
+})
+
+/* -------------------- controllo dei prezzi ----------------------- */
+
+app.post('/api/prodotti/:id/controlla', async (req, res) => {
+  const esito = await eseguiControllo({ id: req.params.id })
+  if (esito.saltato) return res.status(409).json({ errore: 'Un controllo è già in corso.' })
+  if (esito.controllati === 0) {
+    return res.status(400).json({ errore: 'Questo prodotto non ha un link da controllare.' })
+  }
+  const dati = await leggi()
+  res.json({ prodotto: dati.prodotti.find(p => p.id === req.params.id), esito: esito.esiti[0] })
+})
+
+app.post('/api/controlla', async (_req, res) => {
+  if (controlloInCorso()) return res.status(409).json({ errore: 'Un controllo è già in corso.' })
+  const esito = await eseguiControllo()
+  res.json(esito)
 })
 
 app.patch('/api/prodotti/:id', async (req, res) => {

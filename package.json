@@ -4,15 +4,20 @@
   "private": true,
   "description": "Tracker personale di prezzi. Nessuna API key, dati in locale.",
   "type": "module",
-  "workspaces": ["web"],
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
     "start": "npm run build && node server/index.js",
     "build": "npm run build --workspace web",
     "server": "node server/index.js",
     "dev": "node server/index.js & npm run dev --workspace web",
-    "controlla": "node server/controlla.js"
+    "controlla": "node server/controlla.js",
+    "test": "node --test \"server/scraper/prove/*.test.js\""
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "cheerio": "^1.0.0",
     "express": "^5.1.0",
