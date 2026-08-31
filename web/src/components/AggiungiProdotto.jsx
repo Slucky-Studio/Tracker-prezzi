@@ -3,6 +3,7 @@ import './AggiungiProdotto.css'
 import Foglio from './Foglio'
 import { Pannello } from './Vetro'
 import { api } from '../api'
+import { leggiPrezzo } from '../utils/ocr'
 
 const MODI = [
   { id: 'link', etichetta: 'Link' },
@@ -21,6 +22,7 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
   const [inCorso, setInCorso] = useState(false)
   const [avviso, setAvviso] = useState(null)
   const [errore, setErrore] = useState(null)
+  const [ocr, setOcr] = useState(null)
   const fileRef = useRef(null)
 
   const pronto = modo === 'link' ? url.trim().length > 4 : nome.trim().length > 0
@@ -56,7 +58,19 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
   function leggiFile(file) {
     if (!file || !file.type.startsWith('image/')) return
     const lettore = new FileReader()
-    lettore.onload = () => setImmagine(lettore.result)
+    lettore.onload = async () => {
+      const dataUrl = lettore.result
+      setImmagine(dataUrl)
+      setOcr('preparo il riconoscimento…')
+      const trovato = await leggiPrezzo(dataUrl, { onStato: setOcr })
+      if (trovato?.prezzo) {
+        const scritto = trovato.prezzo.toFixed(2).replace('.', ',')
+        setPrezzo(scritto)
+        setOcr(`ho letto ${scritto}. Correggi se ho sbagliato.`)
+      } else {
+        setOcr('non ho riconosciuto un prezzo. Scrivilo tu, l’immagine la tengo lo stesso.')
+      }
+    }
     lettore.readAsDataURL(file)
   }
 
@@ -136,7 +150,12 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
       {modo === 'foto' && (
         <>
           {immagine ? (
-            <img className="anteprima-immagine" src={immagine} alt="" />
+            <>
+              <img className="anteprima-immagine" src={immagine} alt="" />
+              <button className="bottone piatto" onClick={() => { setImmagine(null); setOcr(null) }}>
+                Cambia immagine
+              </button>
+            </>
           ) : (
             <div
               className={`zona-immagine ${sopra ? 'sopra' : ''}`}
@@ -181,6 +200,7 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
         </>
       )}
 
+      {modo === 'foto' && ocr && <Pannello className="avviso">{ocr}</Pannello>}
       {avviso && <Pannello className="avviso">{avviso}</Pannello>}
       {errore && <Pannello className="avviso">{errore}</Pannello>}
     </Foglio>
