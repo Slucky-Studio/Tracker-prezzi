@@ -1,0 +1,17 @@
+{
+  "name": "Soglia — blocco note dei prezzi",
+  "short_name": "Soglia",
+  "description": "Scrivi un prezzo, guarda com'era prima. Tutto resta sul telefono.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B1520",
+  "theme_color": "#1B1520",
+  "lang": "it",
+  "icons": [
+    { "src": "icone/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icone/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

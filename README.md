@@ -1,195 +1,145 @@
 # Soglia
 
-Tracker personale di prezzi. Segui un prodotto nel tempo e, quando stai per
-comprarlo, rispondi a una domanda sola:
+Il blocco note dei prezzi. Scrivi un prodotto, scrivi un prezzo; la prossima
+volta che lo vedi in offerta, apri l'app e ti dice se è davvero un buon
+momento o no — guardando la sua storia, non indovinando.
 
-> il prezzo di oggi è buono rispetto a quello che ho visto nei mesi scorsi,
-> o conviene aspettare?
-
-Non è un e-commerce e non è un comparatore. Funziona con qualsiasi prodotto,
-aggiunto da **link**, da **nome scritto a mano** o da **screenshot**.
-
-Nessuna chiave API, nessun servizio a pagamento, nessun account. I dati stanno
-in un file JSON sul tuo computer.
+Gira **solo nel telefono**. Nessun server, nessun account, nessuna chiave
+API, nessun cloud. I dati stanno nella memoria del browser, sul dispositivo
+che stai usando in quel momento.
 
 ---
 
-## Avvio
+## Aprila dal telefono
 
-```bash
-npm install
-npm start
-```
+**https://slucky-studio.github.io/Tracker-prezzi/**
 
-Un comando solo: costruisce l'interfaccia e avvia il server sulla porta 4173.
-In console trovi i due indirizzi:
+(l'indirizzo esatto dipende da dove l'hai pubblicata — vedi *Pubblicarla* più
+sotto se lo stai facendo tu)
 
-```
-  Soglia è in ascolto.
-  su questo computer   http://localhost:4173
-  dal telefono         http://192.168.1.24:4173
-  dati                 /…/Tracker-prezzi/dati/prodotti.json
-  controllo automatico   ogni giorno alle 08:00
-```
+Su iPhone: apri il link in Safari, poi **Condividi → Aggiungi alla schermata
+Home**. Diventa un'icona come le altre app: si apre a schermo intero, senza
+la barra di Safari, e funziona anche senza connessione dopo il primo
+caricamento.
 
-Serve Node 20 o più recente.
+Su Android: Chrome di solito propone da solo "Installa app"; altrimenti è nel
+menu ⋮ → *Aggiungi a schermata Home*.
 
-### Dal telefono
+---
 
-Apri l'indirizzo `dal telefono` con il telefono collegato **alla stessa rete
-Wi-Fi** del computer. Il server ascolta su `0.0.0.0`, quindi non serve altro.
-Il computer deve restare acceso e con Soglia in esecuzione.
-Su iPhone, *Condividi → Aggiungi a Home* la trasforma in un'icona.
+## Come si usa
 
-Se non si apre: quasi sempre è il firewall del computer che blocca la porta
-4173 in entrata. Consentila per Node.
-
-### Altri comandi
-
-| comando | cosa fa |
-|---|---|
-| `npm start` | build + server (l'uso normale) |
-| `npm run server` | solo il server, senza ricostruire l'interfaccia |
-| `npm run controlla` | controlla adesso tutti i prodotti con link, da riga di comando |
-| `npm run dev` | server + Vite con ricarica a caldo, per lavorare al codice |
-| `npm test` | le prove del normalizzatore di prezzo e della cascata di estrazione |
+- **Aggiungi** → scrivi nome e prezzo, invio. Due campi, basta.
+- Oppure trascina o incolla uno **screenshot** di un'offerta: il prezzo viene
+  letto dallo screenshot stesso (OCR nel telefono, nessuna rete) e
+  precompilato — tu confermi o correggi.
+- Un **link** è facoltativo, solo come promemoria cliccabile verso la pagina
+  del prodotto. Non viene controllato da solo: qui non c'è un server che gira
+  di notte a guardare i siti per te.
+- Ogni volta che vedi un prezzo nuovo, apri il prodotto e aggiungilo: la
+  cronologia cresce, il grafico e la fascia di prezzo si aggiornano.
+- Il **verdetto** su ogni card (*minimo storico*, *buon momento*, *caro*,
+  *pochi dati*) e la fascia luminosa sotto il prezzo sono la risposta rapida:
+  dove sta oggi rispetto a tutto quello che hai visto prima.
 
 ---
 
 ## Dove stanno i dati
 
-```
-dati/
-  prodotti.json     la fonte di verità: prodotti, storico, impostazioni
-  backup/           copie datate automatiche, tenute le ultime 10
-  img/              le immagini che incolli o trascini
-```
+Nella memoria del browser (**IndexedDB**), solo su questo dispositivo. Non
+c'è un file da qualche parte che puoi copiare, non c'è sincronizzazione tra
+telefoni.
 
-`dati/prodotti.json` è un file di testo: puoi aprirlo, leggerlo, copiarlo su
-una chiavetta. Viene creato al primo avvio e non è versionato da git.
+Questo significa una cosa importante: **se disinstalli l'app, cancelli i dati
+del browser, o cambi telefono, l'archivio sparisce con loro.** Per questo in
+*Impostazioni* c'è sempre:
 
-**Export e import** sono in *Impostazioni*. L'export è il tuo backup e il modo
-di spostare tutto su un altro PC; l'import ti chiede prima quanti prodotti stai
-per caricare e se vuoi *unire* o *sostituire*. Prima di ogni import viene fatta
-una copia dell'archivio. Un file malformato viene rifiutato con un messaggio,
-senza toccare i dati che hai già.
+- **Esporta JSON** — scarica un file con tutto, immagini comprese. È il tuo
+  backup, e il modo di portare l'archivio su un altro telefono.
+- **Importa JSON** — carica un export precedente, con anteprima di quanti
+  prodotti stai per aggiungere e scelta *unisci* (tiene quello che hai già) o
+  *sostituisci*. Un file non valido viene rifiutato con un messaggio chiaro,
+  senza toccare i dati che hai già.
 
-Lo schema ha un numero di versione: gli export vecchi vengono migrati
-automaticamente all'apertura, quindi non si rompono mai.
-
----
-
-## Il controllo automatico
-
-Gira nel server, non nel browser: funziona anche con nessuna scheda aperta,
-purché il processo `npm start` resti acceso.
-
-- frequenza scegliibile in *Impostazioni*: ogni giorno alle 08:00 (predefinito),
-  ogni 12 ore, ogni 6 ore, oppure solo manuale;
-- coda seriale con 3-6 secondi di pausa fra un sito e l'altro, mai richieste
-  parallele: è il modo più rapido per farsi bloccare;
-- timeout 15 secondi, due tentativi, poi si arrende in silenzio;
-- **un punto nella cronologia si scrive solo se il prezzo è cambiato**;
-  altrimenti aggiorna solo la data dell'ultimo controllo;
-- all'avvio, se l'ultimo controllo è più vecchio dell'intervallo, ne fa subito uno;
-- backup datato prima di ogni scrittura di massa.
+Esportalo ogni tanto, soprattutto prima di aggiornare il telefono o svuotare
+la cache del browser.
 
 ---
 
-## Limiti noti dello scraping
+## Pubblicarla (per chi vuole ospitarla altrove)
 
-Il prezzo viene letto dalla pagina in cascata: JSON-LD (`@type: Product`) →
-microdata schema.org → meta tag Open Graph → euristica sul DOM, con i prezzi
-barrati e di listino scartati. Ci si ferma al primo passo che funziona.
+Il repository include `.github/workflows/pages.yml`: ad ogni push su questo
+branch (o su `main`), costruisce l'app e la pubblica su **GitHub Pages**
+gratuitamente. Per attivarlo la prima volta:
 
-**Alcuni siti bloccano attivamente le richieste automatiche.** Amazon in primis,
-ma non solo: possono rispondere `403`, mostrare un captcha, o cambiare il
-proprio HTML da un giorno all'altro. Con quei siti il tracking automatico può
-smettere di funzionare senza preavviso: **è previsto**. Il prodotto non si
-rompe — passa in stato *controllo fallito* o *sito bloccato* e resta
-aggiornabile a mano dal dettaglio.
+*Impostazioni del repository → Pages → Source: "GitHub Actions"* — poi il
+workflow fa il resto da solo.
 
-Vale lo stesso per l'aggiunta da link: se il prezzo non si legge, il prodotto
-viene creato lo stesso con quello che si è riuscito a leggere (spesso nome e
-immagine) e il prezzo lo metti tu.
+Se preferisci ospitarla tu (Netlify, Vercel, un tuo spazio):
 
-Nessun proxy pubblico, nessun servizio di scraping: sono inaffidabili e quasi
-sempre a pagamento.
+```bash
+npm install
+npm run build
+```
+
+produce una cartella `web/dist/` con solo file statici (HTML, CSS, JS): la
+carichi dove vuoi, non serve altro. Se il sito non vive alla radice del
+dominio (es. `tuosito.it/soglia/`), builda con
+`BASE_PATH=/soglia/ npm run build` così i percorsi restano corretti.
+
+Per lavorare in locale con ricarica automatica: `npm run dev`.
 
 ---
 
 ## Gli sfondi
 
-Quattro sfondi, ognuno fatto di due strati: un gradiente CSS sempre presente e
-una fotografia che entra in dissolvenza quando è pronta. Se la foto manca resta
-il gradiente, e la schermata non è mai bianca né rotta.
-
-Per usare le tue foto, mettile in `web/public/sfondi/` con questi nomi:
+Quattro sfondi, ognuno con un gradiente dipinto a mano (sempre presente) e
+una fotografia che entra in dissolvenza sopra, se c'è. Per usare le tue foto,
+mettile in `web/public/sfondi/` con questi nomi:
 
 ```
 notturno.jpg    ambra.jpg    bruma.jpg    inchiostro.jpg
 ```
 
-poi rilancia `npm start`. Per cambiarne i nomi o aggiungerne altri, il file da
-toccare è `web/src/data/sfondi.js`.
+poi ricostruisci (`npm run build`) o ripubblica.
 
 ---
 
 ## L'OCR delle immagini
 
-Trascina o incolla uno screenshot: `tesseract.js` gira **nel browser**, legge il
-prezzo scritto più in grande (così il prezzo barrato non vince su quello di
-oggi) e precompila il campo. Tu confermi o correggi.
-
-Motore e modello italiano vengono copiati da `node_modules` a
-`web/public/ocr/` durante il build: nessuna CDN, nessuna chiamata di rete,
-nessuna chiave. La prima immagine richiede qualche secondo in più perché il
-motore si carica; se il riconoscimento fallisce, il campo resta vuoto e
-l'immagine viene comunque salvata come foto del prodotto.
-
----
-
-## Controllo a PC spento (facoltativo)
-
-Il percorso principale resta locale. Se però vuoi che i prezzi si aggiornino
-anche a computer spento, in `.github/workflows/controllo.yml.esempio` trovi un
-workflow GitHub Actions già pronto: gira `npm run controlla` una volta al giorno
-e ricommitta `dati/prodotti.json`.
-
-Per usarlo:
-
-1. rinomina il file in `controllo.yml`;
-2. togli `dati/prodotti.json` da `.gitignore` e committalo, altrimenti il
-   workflow non ha niente da controllare;
-3. **usa un repository privato**: quel file è la tua lista della spesa.
-
-Ricordati poi di fare `git pull` sul computer prima di aprire Soglia, se no le
-due copie divergono. È il motivo per cui questa strada resta facoltativa.
+`tesseract.js` gira **nel browser**: legge il numero scritto più in grande
+nello screenshot (così un prezzo barrato non vince su quello di oggi) e
+propone il prezzo. Motore e modello italiano sono copiati da `node_modules` a
+`web/public/ocr/` durante il build — nessuna CDN, nessuna chiamata di rete,
+nessuna chiave. La prima immagine richiede qualche secondo in più mentre il
+motore si carica; se non riconosce niente, il campo resta vuoto e l'immagine
+si salva comunque.
 
 ---
 
 ## Com'è fatto
 
+Un'unica app React statica, installabile come PWA (manifest + service worker
+per l'uso offline). Non c'è più un server: quello che serviva a Soglia in una
+versione precedente (scraping automatico dei prezzi dai link, controllo
+periodico) è stato tolto perché richiedeva un computer sempre acceso — non
+compatibile con "solo dal telefono".
+
 ```
-server/
-  index.js          API + statici (Express)
-  archivio.js       lettura/scrittura JSON, backup, migrazione
-  scheduler.js      node-cron
-  controllo.js      orchestrazione: archivio + scraper
-  controlla.js      la stessa cosa da riga di comando
-  scraper/
-    scarica.js          richiesta HTTP con User-Agent da browser
-    estrai.js           la cascata JSON-LD → microdata → meta → DOM
-    normalizzaPrezzo.js "1.299,00 €" → 1299
-    controlla.js        coda seriale, disaccoppiata da Express
 web/src/
+  archivio.js       il "database": IndexedDB, CRUD, export/import, migrazione
   theme.css         i token: colori, raggi, scala tipografica
   components/       Vetro (il materiale), FasciaPrezzo (l'elemento firma), …
   schermate/        Elenco, Dettaglio, Impostazioni
-  utils/            formattazione, calcolo del verdetto, OCR
-dati/               i tuoi dati (creati al primo avvio)
+  utils/            formattazione, calcolo del verdetto, OCR, prezzi
+web/public/
+  manifest.webmanifest, sw.js, icone/    installabilità e uso offline
+  sfondi/                                le tue fotografie
 ```
 
-Dipendenze: `express`, `node-cron`, `cheerio` per il server; React, Vite e
-`tesseract.js` per l'interfaccia. Nessun ORM, nessuno state manager, nessuna
-libreria di UI o di grafici: il CSS e l'SVG sono scritti a mano.
+Dipendenze: React, Vite, `tesseract.js` per l'OCR. Nessun server, nessun
+ORM, nessuno state manager, nessuna libreria di UI o di grafici: il CSS e
+l'SVG del grafico sono scritti a mano.
+
+`npm test` esegue le prove sulla normalizzazione dei prezzi (formato
+italiano, separatori, simboli di valuta).

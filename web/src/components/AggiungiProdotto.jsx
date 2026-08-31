@@ -2,79 +2,42 @@ import { useRef, useState } from 'react'
 import './AggiungiProdotto.css'
 import Foglio from './Foglio'
 import { Pannello } from './Vetro'
-import { api } from '../api'
+import { archivio } from '../archivio'
 import { leggiPrezzo } from '../utils/ocr'
 
 const MODI = [
-  { id: 'link', etichetta: 'Link' },
-  { id: 'mano', etichetta: 'A mano' },
+  { id: 'mano', etichetta: 'Scrivi' },
   { id: 'foto', etichetta: 'Immagine' }
 ]
 
 export default function AggiungiProdotto({ onChiudi, onFatto }) {
-  const [modo, setModo] = useState('link')
-  const [url, setUrl] = useState('')
+  const [modo, setModo] = useState('mano')
   const [nome, setNome] = useState('')
   const [prezzo, setPrezzo] = useState('')
   const [obiettivo, setObiettivo] = useState('')
+  const [url, setUrl] = useState('')
   const [immagine, setImmagine] = useState(null)
   const [sopra, setSopra] = useState(false)
   const [inCorso, setInCorso] = useState(false)
-  const [avviso, setAvviso] = useState(null)
   const [errore, setErrore] = useState(null)
   const [ocr, setOcr] = useState(null)
-  // prodotto già creato dal link ma senza prezzo: qui si completa, non si duplica
-  const [creato, setCreato] = useState(null)
   const fileRef = useRef(null)
 
-  const pronto = creato
-    ? prezzo.trim().length > 0
-    : (modo === 'link' ? url.trim().length > 4 : nome.trim().length > 0)
-
-  /** Secondo passo dopo un link senza prezzo: completa la scheda già creata. */
-  async function completa() {
-    setInCorso(true); setErrore(null)
-    try {
-      const campi = {}
-      if (nome.trim() && nome.trim() !== creato.nome) campi.nome = nome.trim()
-      if (obiettivo.trim()) campi.prezzoObiettivo = obiettivo.trim()
-      if (Object.keys(campi).length) await api.aggiornaProdotto(creato.id, campi)
-
-      const n = Number(prezzo.trim().replace(',', '.'))
-      if (Number.isFinite(n)) await api.aggiungiPrezzo(creato.id, n)
-
-      onFatto?.(creato)
-      onChiudi?.()
-    } catch (e) {
-      setErrore(e.message)
-    } finally {
-      setInCorso(false)
-    }
-  }
+  const pronto = nome.trim().length > 0 && prezzo.trim().length > 0
 
   async function salva() {
     if (!pronto || inCorso) return
-    if (creato) return completa()
-    setInCorso(true); setErrore(null); setAvviso(null)
+    setInCorso(true); setErrore(null)
     try {
-      const risposta = await api.creaProdotto({
-        url: modo === 'link' ? url.trim() : null,
+      const { prodotto } = await archivio.creaProdotto({
         nome: nome.trim(),
-        prezzo: prezzo.trim() || null,
+        prezzo,
         prezzoObiettivo: obiettivo.trim() || null,
+        url: url.trim() || null,
         immagineDati: immagine
       })
-      const p = risposta.prodotto
-      if (modo === 'link' && p.manuale) {
-        setAvviso('Non sono riuscito a leggere il prezzo da questo sito. Inseriscilo tu, il resto funziona lo stesso.')
-        setModo('mano')
-        setCreato(p)
-        setNome(p.nome && p.nome !== 'Senza nome' ? p.nome : nome)
-        onFatto?.(p, { resta: true })
-      } else {
-        onFatto?.(p)
-        onChiudi?.()
-      }
+      onFatto?.(prodotto)
+      onChiudi?.()
     } catch (e) {
       setErrore(e.message)
     } finally {
@@ -107,130 +70,90 @@ export default function AggiungiProdotto({ onChiudi, onFatto }) {
       onChiudi={onChiudi}
       piede={
         <>
-          <button className="bottone" onClick={onChiudi}>{creato ? 'Dopo' : 'Annulla'}</button>
+          <button className="bottone" onClick={onChiudi}>Annulla</button>
           <button className="bottone primario" disabled={!pronto || inCorso} onClick={salva}>
-            {inCorso ? 'Un attimo…' : (creato ? 'Salva il prezzo' : 'Salva')}
+            {inCorso ? 'Un attimo…' : 'Salva'}
           </button>
         </>
       }
     >
-      {!creato && (
-        <Pannello className="segmenti" pillola>
-          {MODI.map(m => (
-            <button
-              key={m.id}
-              className={modo === m.id ? 'attivo' : ''}
-              onClick={() => { setModo(m.id); setErrore(null) }}
-            >
-              {m.etichetta}
-            </button>
-          ))}
-        </Pannello>
-      )}
-
-      {modo === 'link' && (
-        <>
-          <input
-            className="campo"
-            placeholder="Incolla il link del prodotto"
-            value={url}
-            autoFocus
-            inputMode="url"
-            onChange={e => setUrl(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && salva()}
-          />
-          <div className="t-corpo">
-            Leggo io nome e prezzo dalla pagina. Se il sito non me li dà, il prodotto
-            si crea comunque e il prezzo lo metti a mano.
-          </div>
-        </>
-      )}
-
-      {modo === 'mano' && (
-        <>
-          <input
-            className="campo"
-            placeholder="Nome del prodotto"
-            value={nome}
-            autoFocus
-            onChange={e => setNome(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && salva()}
-          />
-          <div className="coppia">
-            <input
-              className="campo"
-              placeholder="Prezzo di oggi"
-              inputMode="decimal"
-              value={prezzo}
-              onChange={e => setPrezzo(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && salva()}
-            />
-            <input
-              className="campo"
-              placeholder="Obiettivo"
-              inputMode="decimal"
-              value={obiettivo}
-              onChange={e => setObiettivo(e.target.value)}
-            />
-          </div>
-        </>
-      )}
+      <Pannello className="segmenti" pillola>
+        {MODI.map(m => (
+          <button
+            key={m.id}
+            className={modo === m.id ? 'attivo' : ''}
+            onClick={() => { setModo(m.id); setErrore(null) }}
+          >
+            {m.etichetta}
+          </button>
+        ))}
+      </Pannello>
 
       {modo === 'foto' && (
-        <>
-          {immagine ? (
-            <>
-              <img className="anteprima-immagine" src={immagine} alt="" />
-              <button className="bottone piatto" onClick={() => { setImmagine(null); setOcr(null) }}>
-                Cambia immagine
-              </button>
-            </>
-          ) : (
-            <div
-              className={`zona-immagine ${sopra ? 'sopra' : ''}`}
-              onClick={() => fileRef.current?.click()}
-              onDragOver={e => { e.preventDefault(); setSopra(true) }}
-              onDragLeave={() => setSopra(false)}
-              onDrop={e => { e.preventDefault(); setSopra(false); leggiFile(e.dataTransfer.files?.[0]) }}
-              onPaste={e => leggiFile(e.clipboardData?.files?.[0])}
-            >
-              <div className="t-corpo">Trascina qui uno screenshot, o tocca per sceglierlo.</div>
-            </div>
-          )}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={e => leggiFile(e.target.files?.[0])}
-          />
-          <input
-            className="campo"
-            placeholder="Nome del prodotto"
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-          />
-          <div className="coppia">
-            <input
-              className="campo"
-              placeholder="Prezzo"
-              inputMode="decimal"
-              value={prezzo}
-              onChange={e => setPrezzo(e.target.value)}
-            />
-            <input
-              className="campo"
-              placeholder="Obiettivo"
-              inputMode="decimal"
-              value={obiettivo}
-              onChange={e => setObiettivo(e.target.value)}
-            />
+        immagine ? (
+          <>
+            <img className="anteprima-immagine" src={immagine} alt="" />
+            <button className="bottone piatto" onClick={() => { setImmagine(null); setOcr(null) }}>
+              Cambia immagine
+            </button>
+          </>
+        ) : (
+          <div
+            className={`zona-immagine ${sopra ? 'sopra' : ''}`}
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setSopra(true) }}
+            onDragLeave={() => setSopra(false)}
+            onDrop={e => { e.preventDefault(); setSopra(false); leggiFile(e.dataTransfer.files?.[0]) }}
+            onPaste={e => leggiFile(e.clipboardData?.files?.[0])}
+          >
+            <div className="t-corpo">Trascina qui uno screenshot, o tocca per sceglierlo.</div>
           </div>
-        </>
+        )
       )}
-
+      {modo === 'foto' && (
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={e => leggiFile(e.target.files?.[0])}
+        />
+      )}
       {modo === 'foto' && ocr && <Pannello className="avviso">{ocr}</Pannello>}
-      {avviso && <Pannello className="avviso">{avviso}</Pannello>}
+
+      <input
+        className="campo"
+        placeholder="Nome del prodotto"
+        value={nome}
+        autoFocus={modo === 'mano'}
+        onChange={e => setNome(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && salva()}
+      />
+      <div className="coppia">
+        <input
+          className="campo"
+          placeholder="Prezzo di oggi"
+          inputMode="decimal"
+          value={prezzo}
+          onChange={e => setPrezzo(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && salva()}
+        />
+        <input
+          className="campo"
+          placeholder="Obiettivo"
+          inputMode="decimal"
+          value={obiettivo}
+          onChange={e => setObiettivo(e.target.value)}
+        />
+      </div>
+      <input
+        className="campo"
+        placeholder="Link (facoltativo)"
+        inputMode="url"
+        value={url}
+        onChange={e => setUrl(e.target.value)}
+      />
+
       {errore && <Pannello className="avviso">{errore}</Pannello>}
     </Foglio>
   )

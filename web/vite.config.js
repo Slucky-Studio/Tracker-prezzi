@@ -1,16 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// La build finisce in web/dist e viene servita dallo stesso Express sulla 4173.
-// In sviluppo (`npm run dev`) Vite gira sulla 5173 e gira le chiamate /api al server.
+// App puramente statica: nessun server, nessuna API da proxare.
+// Su GitHub Pages il sito vive in un sottopercorso (/Tracker-prezzi/):
+// la variabile BASE_PATH, impostata dal workflow di deploy, la gestisce.
 export default defineConfig({
+  base: process.env.BASE_PATH || '/',
   plugins: [react()],
-  server: {
-    host: true,
-    proxy: {
-      '/api': 'http://localhost:4173',
-      '/dati': 'http://localhost:4173'
-    }
-  },
+  server: { host: true },
   build: { outDir: 'dist', emptyOutDir: true }
 })

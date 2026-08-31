@@ -6,7 +6,7 @@ import AggiungiProdotto from './components/AggiungiProdotto'
 import Elenco from './schermate/Elenco'
 import Dettaglio from './schermate/Dettaglio'
 import Impostazioni from './schermate/Impostazioni'
-import { api } from './api'
+import { archivio } from './archivio'
 
 /** Rotta dall'hash: torna indietro col tasto del telefono. */
 function leggiRotta() {
@@ -21,11 +21,10 @@ export default function App() {
   const [errore, setErrore] = useState(null)
   const [rotta, setRotta] = useState(leggiRotta)
   const [aggiungi, setAggiungi] = useState(false)
-  const [controllando, setControllando] = useState(false)
 
   const carica = useCallback(async () => {
     try {
-      setDati(await api.stato())
+      setDati(await archivio.stato())
       setErrore(null)
     } catch (e) {
       setErrore(e.message)
@@ -41,13 +40,6 @@ export default function App() {
   }, [])
 
   const vai = (hash) => { window.location.hash = hash }
-
-  async function controllaTutti() {
-    setControllando(true)
-    try { await api.controllaTutti(); await carica() }
-    catch (e) { setErrore(e.message) }
-    finally { setControllando(false) }
-  }
 
   const sfondo = dati?.impostazioni?.sfondo || 'notturno'
   const prodotto = rotta.nome === 'dettaglio'
@@ -76,8 +68,6 @@ export default function App() {
             onApri={(p) => vai(`/p/${p.id}`)}
             onAggiungi={() => setAggiungi(true)}
             onImpostazioni={() => vai('/impostazioni')}
-            onControllaTutti={controllaTutti}
-            controllando={controllando}
           />
         )}
 

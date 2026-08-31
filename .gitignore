@@ -1,8 +1,5 @@
 node_modules/
 web/dist/
-dati/prodotti.json
-dati/backup/
-dati/img/
 .DS_Store
 *.log
 web/public/ocr/

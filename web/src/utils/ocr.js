@@ -7,7 +7,7 @@
  * Il modello della lingua, se non è in /ocr, lo scarica il browser una volta
  * sola e poi lo tiene in cache: vedi README.
  */
-import { aNumero, riconosciValuta } from '../../../server/scraper/normalizzaPrezzo.js'
+import { aNumero, riconosciValuta } from './normalizzaPrezzo.js'
 
 const LINGUA = 'ita'
 const NUM = "\\d{1,3}(?:[.,\\s' ]\\d{3})*(?:[.,]\\d{1,2})?"

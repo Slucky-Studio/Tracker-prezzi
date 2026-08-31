@@ -10,7 +10,7 @@ const ORDINI = [
   { id: 'nome', etichetta: 'Nome' }
 ]
 
-export default function Elenco({ dati, onApri, onAggiungi, onImpostazioni, onControllaTutti, controllando }) {
+export default function Elenco({ dati, onApri, onAggiungi, onImpostazioni }) {
   const [cerca, setCerca] = useState('')
   const [ordine, setOrdine] = useState('convenienza')
   const [tagScelto, setTagScelto] = useState(null)
@@ -77,9 +77,6 @@ export default function Elenco({ dati, onApri, onAggiungi, onImpostazioni, onCon
             >
               Archiviati
             </button>
-            <button className="bottone" onClick={onControllaTutti} disabled={controllando}>
-              {controllando ? 'Controllo…' : 'Controlla tutti'}
-            </button>
           </div>
 
           {tagDisponibili.length > 0 && (
@@ -101,7 +98,7 @@ export default function Elenco({ dati, onApri, onAggiungi, onImpostazioni, onCon
           </div>
           <div className="t-corpo">
             {dati.prodotti.length === 0
-              ? 'Incolla un link o scrivi un nome per iniziare.'
+              ? 'Scrivi un nome e un prezzo, o parti da uno screenshot.'
               : 'Cambia la ricerca, o togli il filtro sui tag.'}
           </div>
           {dati.prodotti.length === 0 && (

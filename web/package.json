@@ -8,7 +8,8 @@
     "dev": "vite",
     "prebuild": "node copia-ocr.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test \"src/utils/prove/*.test.js\""
   },
   "dependencies": {
     "react": "^18.3.1",

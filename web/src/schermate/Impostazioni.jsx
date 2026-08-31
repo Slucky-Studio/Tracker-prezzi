@@ -2,31 +2,29 @@ import { useEffect, useRef, useState } from 'react'
 import './Impostazioni.css'
 import Vetro, { Pannello } from '../components/Vetro'
 import { SFONDI } from '../data/sfondi'
-import { api } from '../api'
-
-const FREQUENZE = [
-  { id: 'giornaliero', etichetta: 'Ogni giorno alle 08:00' },
-  { id: '12h', etichetta: 'Ogni 12 ore' },
-  { id: '6h', etichetta: 'Ogni 6 ore' },
-  { id: 'manuale', etichetta: 'Solo quando lo chiedo io' }
-]
+import { archivio, scaricaEsportazione, stimaSpazio } from '../archivio'
 
 const VALUTE = ['EUR', 'USD', 'GBP', 'CHF']
+
+function formattaByte(n) {
+  if (!n) return null
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
 
 export default function Impostazioni({ dati, onIndietro, onCambiato }) {
   const imp = dati.impostazioni
   const [messaggio, setMessaggio] = useState(null)
-  const [backup, setBackup] = useState(null)
+  const [spazio, setSpazio] = useState(null)
   const [inArrivo, setInArrivo] = useState(null)   // { dati, quanti, nomeFile }
+  const [esportando, setEsportando] = useState(false)
   const fileRef = useRef(null)
 
-  useEffect(() => {
-    api.backup().then(setBackup).catch(() => setBackup(null))
-  }, [])
+  useEffect(() => { stimaSpazio().then(setSpazio) }, [dati.prodotti.length])
 
   async function cambia(campi, testo) {
     try {
-      await api.impostazioni(campi)
+      await archivio.impostazioni(campi)
       await onCambiato()
       if (testo) setMessaggio(testo)
     } catch (e) {
@@ -40,11 +38,11 @@ export default function Impostazioni({ dati, onIndietro, onCambiato }) {
     const lettore = new FileReader()
     lettore.onload = () => {
       try {
-        const dati = JSON.parse(lettore.result)
-        if (!dati || !Array.isArray(dati.prodotti)) {
+        const contenuto = JSON.parse(lettore.result)
+        if (!contenuto || !Array.isArray(contenuto.prodotti)) {
           throw new Error('Questo file non è un export di Soglia: manca la lista dei prodotti.')
         }
-        setInArrivo({ dati, quanti: dati.prodotti.length, nomeFile: file.name })
+        setInArrivo({ dati: contenuto, quanti: contenuto.prodotti.length, nomeFile: file.name })
       } catch (e) {
         setMessaggio(e instanceof SyntaxError
           ? 'Questo file non è JSON valido. I tuoi dati non sono stati toccati.'
@@ -57,13 +55,20 @@ export default function Impostazioni({ dati, onIndietro, onCambiato }) {
 
   async function importa(modalita) {
     try {
-      const r = await api.importa(inArrivo.dati, modalita)
+      const r = await archivio.importa(inArrivo.dati, modalita)
       setInArrivo(null)
       await onCambiato()
       setMessaggio(`Importati. Ora sono ${r.prodotti} prodotti.`)
     } catch (e) {
       setMessaggio(`${e.message} I tuoi dati non sono stati toccati.`)
     }
+  }
+
+  async function esporta() {
+    setEsportando(true)
+    try { await scaricaEsportazione() }
+    catch { setMessaggio('Non sono riuscito a preparare il file. Riprova.') }
+    finally { setEsportando(false) }
   }
 
   return (
@@ -73,25 +78,6 @@ export default function Impostazioni({ dati, onIndietro, onCambiato }) {
       </div>
 
       <Vetro className="sezione entra">
-        <div className="t-etichetta sezione-titolo">Controllo automatico</div>
-        <div className="scelte">
-          {FREQUENZE.map(f => (
-            <button
-              key={f.id}
-              className={`bottone ${imp.frequenzaControllo === f.id ? 'scelto' : ''}`}
-              onClick={() => cambia({ frequenzaControllo: f.id }, 'Salvato')}
-            >
-              {f.etichetta}
-            </button>
-          ))}
-        </div>
-        <div className="t-corpo">
-          Il controllo gira nel server, in coda, con qualche secondo di pausa tra un
-          sito e l'altro. Un punto nella cronologia si scrive solo se il prezzo cambia.
-        </div>
-      </Vetro>
-
-      <Vetro className="sezione">
         <div className="t-etichetta sezione-titolo">Valuta</div>
         <div className="scelte">
           {VALUTE.map(v => (
@@ -126,7 +112,9 @@ export default function Impostazioni({ dati, onIndietro, onCambiato }) {
       <Vetro className="sezione">
         <div className="t-etichetta sezione-titolo">Export e import</div>
         <div className="scelte">
-          <a className="bottone" href="/api/esporta" download>Esporta JSON</a>
+          <button className="bottone" onClick={esporta} disabled={esportando}>
+            {esportando ? 'Preparo il file…' : 'Esporta JSON'}
+          </button>
           <button className="bottone" onClick={() => fileRef.current?.click()}>Importa JSON</button>
         </div>
         <input
@@ -150,16 +138,21 @@ export default function Impostazioni({ dati, onIndietro, onCambiato }) {
           </Pannello>
         )}
         <div className="t-corpo">
-          Prima di ogni import faccio una copia dell'archivio nella cartella dei backup.
+          Il file esportato contiene tutto, immagini comprese: è il tuo backup completo
+          e il modo di spostare l'archivio su un altro telefono.
         </div>
       </Vetro>
 
       <Vetro className="sezione">
         <div className="t-etichetta sezione-titolo">Dove stanno i dati</div>
-        <Pannello className="messaggio percorso">{backup?.archivio || 'dati/prodotti.json'}</Pannello>
+        <Pannello className="messaggio">
+          Solo su questo dispositivo, nella memoria del browser. Nessun account, nessun cloud.
+        </Pannello>
         <div className="t-corpo">
-          Backup automatici (ultimi 10) in {backup?.cartella || 'dati/backup/'}
-          {backup?.file?.length ? ` — ${backup.file.length} copie.` : '.'}
+          {dati.prodotti.length} {dati.prodotti.length === 1 ? 'prodotto' : 'prodotti'}
+          {spazio?.usage ? ` · circa ${formattaByte(spazio.usage)} occupati` : ''}.
+          Se disinstalli l'app o cancelli i dati del browser, questo archivio sparisce:
+          esportalo ogni tanto.
         </div>
       </Vetro>
 

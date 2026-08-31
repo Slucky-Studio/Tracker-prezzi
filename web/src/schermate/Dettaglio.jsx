@@ -9,12 +9,11 @@ import {
   formattaNumero, formattaPrezzo, formattaPercentuale,
   simbolo, dominio, dataEOra, quando
 } from '../utils/formato'
-import { api, urlImmagine } from '../api'
-
-const STATI = { ok: 'controllo riuscito', fallito: 'controllo fallito', bloccato: 'sito bloccato' }
+import { archivio, useImmagine } from '../archivio'
 
 export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) {
   const analisi = analizza(prodotto)
+  const immagine = useImmagine(prodotto.immagine)
 
   const [nome, setNome] = useState(prodotto.nome)
   const [note, setNote] = useState(prodotto.note)
@@ -52,7 +51,7 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
     }
   }
 
-  const salva = () => con(() => api.aggiornaProdotto(prodotto.id, {
+  const salva = () => con(() => archivio.aggiornaProdotto(prodotto.id, {
     nome: nome.trim() || prodotto.nome,
     note,
     tag: tag.split(',').map(t => t.trim()).filter(Boolean),
@@ -63,7 +62,7 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
     const n = Number(nuovoPrezzo.replace(',', '.'))
     if (!Number.isFinite(n)) { setMessaggio('Prezzo non valido.'); return }
     return con(async () => {
-      const r = await api.aggiungiPrezzo(prodotto.id, n)
+      const r = await archivio.aggiungiPrezzo(prodotto.id, n)
       setNuovoPrezzo('')
       if (!r.cambiato) setMessaggio('Prezzo identico all’ultimo: non l’ho riscritto.')
     }, 'Prezzo aggiunto')
@@ -82,10 +81,10 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
 
       <Vetro className="scheda entra">
         <div className="scheda-alta">
-          {prodotto.immagine && !fotoRotta && (
+          {immagine && !fotoRotta && (
             <img
               className="scheda-foto"
-              src={urlImmagine(prodotto.immagine)}
+              src={immagine}
               alt=""
               onError={() => setFotoRotta(true)}
             />
@@ -93,10 +92,8 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
           <div className="cresci">
             <div className="t-titolo">{prodotto.nome}</div>
             <div className="t-etichetta" style={{ marginTop: 4 }}>
-              {prodotto.url ? dominio(prodotto.url) : 'aggiornato a mano'}
-              {prodotto.ultimoControllo ? ` · ${quando(prodotto.ultimoControllo)}` : ''}
-              {prodotto.statoUltimoControllo && prodotto.statoUltimoControllo !== 'ok'
-                ? ` · ${STATI[prodotto.statoUltimoControllo]}` : ''}
+              {prodotto.url ? dominio(prodotto.url) : 'aggiunto a mano'}
+              {analisi.ultimaData ? ` · aggiornato ${quando(analisi.ultimaData)}` : ''}
             </div>
           </div>
           <Verdetto chiave={analisi.verdetto} />
@@ -152,11 +149,6 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
             Aggiungi
           </button>
         </div>
-        {prodotto.url && (
-          <button className="bottone" onClick={() => con(() => api.controlla(prodotto.id))} disabled={inCorso}>
-            {inCorso ? 'Controllo…' : 'Controlla adesso'}
-          </button>
-        )}
         {messaggio && <Pannello className="messaggio">{messaggio}</Pannello>}
       </Vetro>
 
@@ -199,7 +191,7 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
               <span className="t-valore">{formattaPrezzo(r.prezzo, valuta)}</span>
               <button
                 className="storico-togli"
-                onClick={() => con(() => api.togliRilevazione(prodotto.id, i))}
+                onClick={() => con(() => archivio.togliRilevazione(prodotto.id, i))}
                 title="Togli questa rilevazione"
               >
                 ×
@@ -216,7 +208,7 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
         <div className="azioni">
           <button
             className="bottone"
-            onClick={() => con(() => api.aggiornaProdotto(prodotto.id, { archiviato: !prodotto.archiviato }))}
+            onClick={() => con(() => archivio.aggiornaProdotto(prodotto.id, { archiviato: !prodotto.archiviato }))}
           >
             {prodotto.archiviato ? 'Riprendi a seguire' : 'Archivia'}
           </button>
@@ -224,7 +216,7 @@ export default function Dettaglio({ prodotto, valuta, onIndietro, onCambiato }) 
             className="bottone pericolo"
             onClick={async () => {
               if (!confirm(`Elimino "${prodotto.nome}" e tutta la sua cronologia?`)) return
-              await api.eliminaProdotto(prodotto.id)
+              await archivio.eliminaProdotto(prodotto.id)
               onIndietro()
               await onCambiato()
             }}
