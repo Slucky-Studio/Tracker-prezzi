@@ -1,65 +1,112 @@
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import Sfondo from './components/Sfondo'
-import CardProdotto from './components/CardProdotto'
+import Vetro from './components/Vetro'
+import AggiungiProdotto from './components/AggiungiProdotto'
+import Elenco from './schermate/Elenco'
+import Dettaglio from './schermate/Dettaglio'
+import Impostazioni from './schermate/Impostazioni'
+import { api } from './api'
 
-/* Blocco 1: solo estetica. Dati finti, nessuna logica. */
-const FINTI = [
-  {
-    id: '1', nome: 'Monitor Dell 27" 4K UltraSharp', url: 'https://www.dell.com/it',
-    prezzoObiettivo: 349, ultimoControllo: new Date(Date.now() - 3 * 3600e3).toISOString(),
-    statoUltimoControllo: 'ok',
-    storico: [
-      { data: '2026-04-02T08:00:00Z', prezzo: 469 },
-      { data: '2026-05-11T08:00:00Z', prezzo: 429 },
-      { data: '2026-06-14T08:00:00Z', prezzo: 449 },
-      { data: '2026-07-20T08:00:00Z', prezzo: 399 },
-      { data: '2026-08-30T08:00:00Z', prezzo: 341 }
-    ]
-  },
-  {
-    id: '2', nome: 'MacBook Air M4 16GB', prezzoObiettivo: 1099,
-    ultimoControllo: null,
-    storico: [
-      { data: '2026-06-01T08:00:00Z', prezzo: 1299 },
-      { data: '2026-07-04T08:00:00Z', prezzo: 1249 },
-      { data: '2026-08-21T08:00:00Z', prezzo: 1219 }
-    ]
-  },
-  {
-    id: '3', nome: 'Zaino Peak Design Everyday 30L', url: 'https://www.amazon.it',
-    ultimoControllo: new Date(Date.now() - 26 * 3600e3).toISOString(),
-    statoUltimoControllo: 'bloccato',
-    storico: [
-      { data: '2026-03-08T08:00:00Z', prezzo: 279 },
-      { data: '2026-05-02T08:00:00Z', prezzo: 239 },
-      { data: '2026-06-19T08:00:00Z', prezzo: 259 },
-      { data: '2026-08-28T08:00:00Z', prezzo: 272 }
-    ]
-  },
-  {
-    id: '4', nome: 'Sedia Herman Miller Aeron (usata)',
-    storico: [{ data: '2026-08-29T18:22:00Z', prezzo: 640 }]
-  }
-]
+/** Rotta dall'hash: torna indietro col tasto del telefono. */
+function leggiRotta() {
+  const h = window.location.hash.replace(/^#\/?/, '')
+  if (h === 'impostazioni') return { nome: 'impostazioni' }
+  if (h.startsWith('p/')) return { nome: 'dettaglio', id: h.slice(2) }
+  return { nome: 'elenco' }
+}
 
 export default function App() {
+  const [dati, setDati] = useState(null)
+  const [errore, setErrore] = useState(null)
+  const [rotta, setRotta] = useState(leggiRotta)
+  const [aggiungi, setAggiungi] = useState(false)
+  const [controllando, setControllando] = useState(false)
+
+  const carica = useCallback(async () => {
+    try {
+      setDati(await api.stato())
+      setErrore(null)
+    } catch (e) {
+      setErrore(e.message)
+    }
+  }, [])
+
+  useEffect(() => { carica() }, [carica])
+
+  useEffect(() => {
+    const cambio = () => setRotta(leggiRotta())
+    window.addEventListener('hashchange', cambio)
+    return () => window.removeEventListener('hashchange', cambio)
+  }, [])
+
+  const vai = (hash) => { window.location.hash = hash }
+
+  async function controllaTutti() {
+    setControllando(true)
+    try { await api.controllaTutti(); await carica() }
+    catch (e) { setErrore(e.message) }
+    finally { setControllando(false) }
+  }
+
+  const sfondo = dati?.impostazioni?.sfondo || 'notturno'
+  const prodotto = rotta.nome === 'dettaglio'
+    ? dati?.prodotti.find(p => p.id === rotta.id)
+    : null
+
   return (
     <>
-      <Sfondo id="notturno" />
+      <Sfondo id={sfondo} />
       <div className="guscio">
-        <header className="intestazione">
-          <div>
-            <div className="marchio">Soglia</div>
-            <div className="t-corpo marchio-sotto">4 prodotti seguiti</div>
-          </div>
-          <button className="bottone primario">Aggiungi</button>
-        </header>
+        {!dati && !errore && (
+          <Vetro className="vuoto entra"><div className="t-corpo">Carico l'archivio…</div></Vetro>
+        )}
 
-        <div className="griglia">
-          {FINTI.map((p, i) => (
-            <CardProdotto key={p.id} prodotto={p} ritardo={i * 70} />
-          ))}
-        </div>
+        {errore && (
+          <Vetro className="vuoto entra">
+            <div className="t-titolo">Non riesco a leggere i dati.</div>
+            <div className="t-corpo">{errore}</div>
+            <button className="bottone primario" onClick={carica}>Riprova</button>
+          </Vetro>
+        )}
+
+        {dati && rotta.nome === 'elenco' && (
+          <Elenco
+            dati={dati}
+            onApri={(p) => vai(`/p/${p.id}`)}
+            onAggiungi={() => setAggiungi(true)}
+            onImpostazioni={() => vai('/impostazioni')}
+            onControllaTutti={controllaTutti}
+            controllando={controllando}
+          />
+        )}
+
+        {dati && rotta.nome === 'impostazioni' && (
+          <Impostazioni dati={dati} onIndietro={() => vai('/')} onCambiato={carica} />
+        )}
+
+        {dati && rotta.nome === 'dettaglio' && (
+          prodotto ? (
+            <Dettaglio
+              prodotto={prodotto}
+              valuta={dati.impostazioni.valuta}
+              onIndietro={() => vai('/')}
+              onCambiato={carica}
+            />
+          ) : (
+            <Vetro className="vuoto entra">
+              <div className="t-titolo">Questo prodotto non c'è più.</div>
+              <button className="bottone primario" onClick={() => vai('/')}>Torna all'elenco</button>
+            </Vetro>
+          )
+        )}
+
+        {aggiungi && (
+          <AggiungiProdotto
+            onChiudi={() => setAggiungi(false)}
+            onFatto={async (p, opzioni) => { await carica(); if (!opzioni?.resta) vai(`/p/${p.id}`) }}
+          />
+        )}
       </div>
     </>
   )

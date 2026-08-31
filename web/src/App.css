@@ -23,6 +23,11 @@
   gap: var(--s4);
 }
 
+@media (max-width: 560px) {
+  .intestazione { flex-direction: column; align-items: stretch; gap: var(--s3); }
+  .intestazione .riga > .bottone { flex: 1; }
+}
+
 @media (max-width: 420px) {
   .guscio { padding-left: var(--s3); padding-right: var(--s3); }
   .griglia { grid-template-columns: 1fr; gap: var(--s3); }

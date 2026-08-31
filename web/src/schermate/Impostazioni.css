@@ -1,0 +1,30 @@
+.scelte { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.scelte .bottone { flex: 1 1 180px; }
+
+.sfondi-scelta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--s3);
+}
+.miniatura {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: flex-start;
+  padding: var(--s2);
+  border-radius: var(--r-pannello);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color var(--rapido), background var(--rapido);
+}
+.miniatura.attiva { border-color: var(--accento); background: var(--accento-velo); }
+.miniatura-tela {
+  display: block;
+  width: 100%;
+  height: 74px;
+  border-radius: var(--r-minimo);
+  border: 1px solid var(--hairline-interno);
+}
+
+.percorso { font-size: 12px; word-break: break-all; color: var(--testo-dim); }

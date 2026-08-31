@@ -1,0 +1,54 @@
+.segmenti {
+  display: flex;
+  gap: var(--s1);
+  padding: var(--s1);
+  border-radius: var(--r-pillola);
+}
+.segmenti button {
+  flex: 1;
+  padding: 9px 10px;
+  border-radius: var(--r-pillola);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--testo-faint);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--rapido), color var(--rapido);
+}
+.segmenti button.attivo {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--hairline-interno);
+  color: var(--testo);
+}
+
+.coppia { display: flex; gap: var(--s2); }
+.coppia > * { flex: 1; min-width: 0; }
+
+.zona-immagine {
+  border: 1px dashed var(--hairline);
+  border-radius: var(--r-pannello);
+  padding: var(--s6) var(--s4);
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--rapido), border-color var(--rapido);
+}
+.zona-immagine:hover, .zona-immagine.sopra {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--hairline-alto);
+}
+.anteprima-immagine {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: var(--r-pannello);
+  background: var(--ink-soft);
+}
+
+.avviso {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-minimo);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--testo-dim);
+}

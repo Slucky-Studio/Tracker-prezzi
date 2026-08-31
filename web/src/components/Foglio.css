@@ -1,0 +1,39 @@
+.velo-foglio {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 7, 14, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--s4);
+  animation: sfuma 220ms both;
+}
+@keyframes sfuma { from { opacity: 0 } to { opacity: 1 } }
+
+.foglio {
+  width: 100%;
+  max-width: 560px;
+  max-height: min(88vh, 780px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s5) var(--s5) calc(var(--s5) + env(safe-area-inset-bottom));
+  animation: sali var(--medio) both;
+}
+
+@media (min-width: 640px) {
+  .velo-foglio { align-items: center; }
+}
+
+.foglio-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+}
+.foglio-corpo { display: flex; flex-direction: column; gap: var(--s3); }
+.foglio-piede { display: flex; gap: var(--s2); margin-top: var(--s5); }
+.foglio-piede .bottone { flex: 1; }
